@@ -85,25 +85,26 @@ class PRService:
                 except Exception as e:
                     logging.error(f"Error processing result: {e}")
                     continue
-                final_results = PRReview(
-                    files=[File(
-                            name=res["file"]["name"],
-                            issues=[FileIssue(
-                                type=issue["type"],
-                                line=issue["line_number"],
-                                description=issue["description"],
-                                suggestion=issue["suggestion"]
-                            ) for issue in res["file"]["issues"]]
-                        )
-                        for res in parsed_results
-                    ],
-                    summary=Summary(
-                        total_files=sum(res['summary']['total_files'] for res in parsed_results),
-                        total_issues=sum(res['summary']['total_issues'] for res in parsed_results),
-                        critical_issues=sum(res['summary']['critical_issues'] for res in parsed_results)
+                
+            final_results = PRReview(
+                files=[File(
+                        name=res["file"]["name"],
+                        issues=[FileIssue(
+                            type=issue["type"],
+                            line=issue["line_number"],
+                            description=issue["description"],
+                            suggestion=issue["suggestion"]
+                        ) for issue in res["file"]["issues"]]
                     )
+                    for res in parsed_results
+                ],  
+                summary=Summary(
+                    total_files=sum(res['summary']['total_files'] for res in parsed_results),
+                    total_issues=sum(res['summary']['total_issues'] for res in parsed_results),
+                    critical_issues=sum(res['summary']['critical_issues'] for res in parsed_results)
                 )
-
+            )
+        
             logging.info(f"Saving results to Redis: {final_results}") 
             redis_app.set(
                 name=f"{task_id}", 
