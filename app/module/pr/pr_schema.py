@@ -2,7 +2,7 @@ from enum import Enum
 from pydantic import BaseModel
 from typing import List, Optional , Any
 
-from app.module.pr.py_model import File, PRReview, Summary
+from app.module.pr.pr_model import File, PRReview, Summary
 
 class PRTaskStatus(str, Enum):
     pending = "pending"

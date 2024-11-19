@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Any
 from fastapi import HTTPException
 from app.module.pr.pr_helper import celery_status_convert
 from app.module.pr.pr_schema import (
@@ -8,7 +9,8 @@ from app.module.pr.pr_schema import (
     AnalyzePRStatus,
     AnalyzePRResults,
 )
-from app.module.pr.py_model import PRReview
+from app.module.pr.pr_service import PRService
+from app.module.pr.pr_model import PRReview
 from app.worker.celery_app import celery_app
 from app.db.redis_app import redis_app
 
@@ -48,3 +50,16 @@ class PRController:
         except Exception as e:
             logging.error(f"Unexpected error while analyzing PR: {e}")
             raise HTTPException(status_code=500, detail="Failed to analyze PR")
+    
+    @staticmethod
+    def analyze_pr_v2(request: AnalyzePRRequest) -> Any:
+        try:
+            return PRService.analyze_pr_v2(
+                repo_url=request.repo_url, 
+                pr_number=request.pr_number, 
+                github_token=request.github_token
+            )
+        except Exception as e:
+            logging.error(f"Unexpected error while analyzing PR: {e}")
+            raise HTTPException(status_code=500, detail="Failed to analyze PR")
+

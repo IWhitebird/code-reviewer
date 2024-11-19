@@ -7,14 +7,15 @@ load_dotenv()
 
 REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+QUEUE_DB = int(os.getenv("QUEUE_DB", 0))
 QUEUE_NAME = os.getenv("QUEUE_NAME", "app")
 
-conn_url = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+conn_url = f"redis://{REDIS_HOST}:{REDIS_PORT}/{QUEUE_DB}"
 
 def create_celery_app() -> Celery:
     celery_app = Celery(QUEUE_NAME, broker=conn_url, backend=conn_url)
     celery_app.autodiscover_tasks(
-        ["app.module.pr.pr_service"],
+        ["app.module.pr.pr_worker"],
         related_name="tasks_analyze_pr"
     )
     try:

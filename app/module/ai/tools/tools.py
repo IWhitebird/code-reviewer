@@ -1,0 +1,1 @@
+#Currently Writing Tools in the Agent Itself later Inject them in agent

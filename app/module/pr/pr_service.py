@@ -3,15 +3,36 @@ import json
 import logging
 from typing import List
 
-from app.module.agents.gemini_agent import GeminiAgent
+from app.module.ai.llm.gemini_llm import GeminiLLM
 from app.module.github.gh_service import GHService
-from app.module.pr.py_model import File, FileIssue, PRReview, Summary
+from app.module.pr.pr_model import File, FileIssue, PRReview, Summary
 from app.worker.celery_app import celery_app
 from app.db.redis_app import redis_app
 from app.module.pr.pr_schema import PRAnalyzeLLMInput , PRAnalyzeLLMOutput
+from app.module.ai.agents.pr_agent import PRAgent
+
 class PRService:
+    
     @staticmethod
     @celery_app.task(name='tasks_analyze_pr')
+    def analyze_pr_v2(repo_url : str, pr_number : int, github_token : str):
+        try:
+            # task_id = celery_app.current_task.request.id
+            # logging.info(f"Analyzing PR  V2 ({task_id} {repo_url}, {pr_number})")   
+            logging.info(f"Creating Knowledge that tools can use")
+            
+            gh = GHService()
+            db = redis_app;
+            agent = PRAgent(gh , repo_url , db)
+            result = agent.get_pr_review(pr_number)
+            return result
+            pass
+        except Exception as e:
+            # logging.error(f"Unexpected error while analyzing PR with task_id {task_id} : {e}")
+            pass
+    
+    @staticmethod
+    @celery_app.task(name='tasks_analyze_pr_old')
     def analyze_pr(repo_url : str, pr_number : int, github_token : str) -> str:
         try:
             task_id = celery_app.current_task.request.id
@@ -21,7 +42,7 @@ class PRService:
             pr_files = asyncio.run(GHService.get_pr_files(repo_url, pr_number, github_token))
 
             # agent = GeminiAgent(input_schema=PRAnalyzeLLMInput , output_schema=PRAnalyzeLLMOutput)
-            agent = GeminiAgent()
+            agent = GeminiLLM()
             
             # Not working properly for Gemini
             agent.model.with_types(input_type=PRAnalyzeLLMInput, output_type=PRAnalyzeLLMOutput)
@@ -120,3 +141,8 @@ class PRService:
             logging.error(f"Unexpected error while analyzing PR with task_id {task_id} : {e}")
             pass
         
+   
+
+    
+    def result_serializer(self, result):
+        return json.dumps(result)
